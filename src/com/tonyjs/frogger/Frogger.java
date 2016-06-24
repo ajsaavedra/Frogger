@@ -182,8 +182,14 @@ public class Frogger extends Application {
                 animateFrog();
                 animateVehicles();
                 checkVehicleLocation();
+
                 if (CLICKED) {
                     keepFrogWithinCanvas();
+                }
+
+                if (frogWasHit()) {
+                    GAME_START = false;
+                    timer.stop();
                 }
             }
         };
@@ -271,6 +277,32 @@ public class Frogger extends Application {
         } else if (v.getPositionX() > APP_WIDTH) {
             v.setPositionXY(0, v.getPositionY());
         }
+    }
+
+    private boolean frogWasHit() {
+        double x = frogSprite.getPositionX();
+
+        for (int i = 0; i < 4; i++) {
+            if (i < 2) {
+                if (fourthRow.get(i).getCar().intersectsSprite(frogSprite)) {
+                    return true;
+                }
+            }
+            if (i < 3) {
+                if (trucks.get(i).getTruck().intersectsSprite(frogSprite)) {
+                    return true;
+                }
+            }
+            
+            if (firstRow.get(i).getCar().intersectsSprite(frogSprite)) {
+                return true;
+            } else if (secondRow.get(i).getCar().intersectsSprite(frogSprite)) {
+                return true;
+            } else if (thirdRow.get(i).getCar().intersectsSprite(frogSprite)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void moveFrogUp() {
