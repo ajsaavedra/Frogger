@@ -22,7 +22,7 @@ public class Frogger extends Application {
     private int APP_HEIGHT = 700;
     private int currentAnimation = 0;
     private double elapsedTime, motionTime;
-    private int vehicleVelocityX = 180;
+    private int vehicleVelocityX = 50;
     private boolean CLICKED, GAME_START;
     private Group root;
     private GraphicsContext gc;
@@ -181,6 +181,7 @@ public class Frogger extends Application {
                 gc.clearRect(0, 0, APP_WIDTH, APP_HEIGHT);
                 animateFrog();
                 animateVehicles();
+                checkVehicleLocation();
                 if (CLICKED) {
                     keepFrogWithinCanvas();
                 }
@@ -238,6 +239,37 @@ public class Frogger extends Application {
             v = thirdRow.get(i).getCar();
             v.render(gc);
             v.update(elapsedTime);
+        }
+    }
+
+    private void checkVehicleLocation() {
+        Sprite v;
+        for (int i = 0; i < 4; i++) {
+            if (i < 2) {
+                v = fourthRow.get(i).getCar();
+                resetVehicle(v);
+            }
+            if (i < 3) {
+                v = trucks.get(i).getTruck();
+                resetVehicle(v);
+            }
+
+            v = firstRow.get(i).getCar();
+            resetVehicle(v);
+
+            v = secondRow.get(i).getCar();
+            resetVehicle(v);
+
+            v = thirdRow.get(i).getCar();
+            resetVehicle(v);
+        }
+    }
+
+    private void resetVehicle(Sprite v) {
+        if (v.getPositionX() < 0 - v.getWidth()) {
+            v.setPositionXY(APP_WIDTH, v.getPositionY());
+        } else if (v.getPositionX() > APP_WIDTH) {
+            v.setPositionXY(0, v.getPositionY());
         }
     }
 
