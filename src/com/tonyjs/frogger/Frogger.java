@@ -12,6 +12,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
+
 /**
  * Created by tonysaavedra on 6/23/16.
  */
@@ -20,12 +22,15 @@ public class Frogger extends Application {
     private int APP_HEIGHT = 700;
     private int currentAnimation = 0;
     private double elapsedTime, motionTime;
-    private boolean CLICKED;
+    private int vehicleVelocityX = 180;
+    private boolean CLICKED, GAME_START;
     private Group root;
     private GraphicsContext gc;
     private Frog frogger;
     private Sprite frogSprite;
     private Sprite[] currentFrogAnimation;
+    private ArrayList<Car> firstRow, secondRow, thirdRow, fourthRow;
+    private ArrayList<Truck> trucks;
     private AnimationTimer timer;
     private LongValue startNanoTime;
 
@@ -39,6 +44,7 @@ public class Frogger extends Application {
         setKeyFunctions(main);
         primaryStage.setScene(main);
         primaryStage.show();
+        startGame();
     }
 
     private Parent getContent() {
@@ -51,23 +57,27 @@ public class Frogger extends Application {
         root.getChildren().addAll(background, canvas);
 
         setFrogger();
+        initializeCars();
+        placeCars();
+        setTrucks();
+
         return root;
     }
 
     private void setKeyFunctions(Scene scene) {
         scene.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.SPACE) {
-                startGame();
-            } else if (e.getCode() == KeyCode.UP) {
+                GAME_START = true;
+            } else if (GAME_START && e.getCode() == KeyCode.UP) {
                 CLICKED = true;
                 moveFrogUp();
-            } else if (e.getCode() == KeyCode.DOWN) {
+            } else if (GAME_START && e.getCode() == KeyCode.DOWN) {
                 CLICKED = true;
                 moveFrogDown();
-            } else if (e.getCode() == KeyCode.LEFT) {
+            } else if (GAME_START && e.getCode() == KeyCode.LEFT) {
                 CLICKED = true;
                 moveFrogLeft();
-            } else  if (e.getCode() == KeyCode.RIGHT) {
+            } else  if (GAME_START && e.getCode() == KeyCode.RIGHT) {
                 CLICKED = true;
                 moveFrogRight();
             }
@@ -98,6 +108,69 @@ public class Frogger extends Application {
         frogSprite.render(gc);
     }
 
+    private void initializeCars() {
+        firstRow = new ArrayList<>();
+        secondRow = new ArrayList<>();
+        thirdRow = new ArrayList<>();
+        fourthRow = new ArrayList<>();
+
+        for (int i = 0; i < 4; i++) {
+            firstRow.add(i, new Car(0));
+            secondRow.add(i, new Car(1));
+            thirdRow.add(i, new Car(3));
+
+            if (i < 2) {
+                fourthRow.add(i, new Car(2));
+            }
+        }
+    }
+
+    private void placeCars() {
+        double x = 50;
+        double y = 600;
+        Sprite c;
+        for (int i = 0; i < 4; i++) {
+            c = firstRow.get(i).getCar();
+            c.setPositionXY(x, y);
+            c.setVelocity(vehicleVelocityX, 0);
+            c.render(gc);
+
+            c = secondRow.get(i).getCar();
+            c.setPositionXY(x, y - 45);
+            c.setVelocity(-vehicleVelocityX, 0);
+            c.render(gc);
+
+            c = thirdRow.get(i).getCar();
+            c.setPositionXY(x, y - 90);
+            c.setVelocity(vehicleVelocityX, 0);
+            c.render(gc);
+
+            if (i < 2) {
+                c = fourthRow.get(i).getCar();
+                c.setPositionXY(x, y - 135);
+                c.setVelocity(vehicleVelocityX * 3, 0);
+                c.render(gc);
+            }
+
+            x += 150;
+        }
+    }
+
+    private void setTrucks() {
+        trucks = new ArrayList<>();
+        double x = 50;
+        double y = 420;
+        Sprite t;
+        for (int i = 0; i < 3; i++) {
+            trucks.add(i, new Truck());
+            t = trucks.get(i).getTruck();
+            t.setPositionXY(x, y);
+            t.setVelocity(-vehicleVelocityX, 0);
+            t.render(gc);
+            x += 180;
+        }
+    }
+
     private void startGame() {
         startNanoTime = new LongValue(System.nanoTime());
         timer = new AnimationTimer() {
@@ -107,6 +180,7 @@ public class Frogger extends Application {
 
                 gc.clearRect(0, 0, APP_WIDTH, APP_HEIGHT);
                 animateFrog();
+                animateVehicles();
                 if (CLICKED) {
                     keepFrogWithinCanvas();
                 }
@@ -137,6 +211,34 @@ public class Frogger extends Application {
 
         frogSprite = currentFrogAnimation[currentAnimation];
         currentAnimation++;
+    }
+
+    private void animateVehicles() {
+        Sprite v;
+        for (int i = 0; i < 4; i++) {
+            if (i < 2) {
+                v = fourthRow.get(i).getCar();
+                v.render(gc);
+                v.update(elapsedTime);
+            }
+            if (i < 3) {
+                v = trucks.get(i).getTruck();
+                v.render(gc);
+                v.update(elapsedTime);
+            }
+
+            v = firstRow.get(i).getCar();
+            v.render(gc);
+            v.update(elapsedTime);
+
+            v = secondRow.get(i).getCar();
+            v.render(gc);
+            v.update(elapsedTime);
+
+            v = thirdRow.get(i).getCar();
+            v.render(gc);
+            v.update(elapsedTime);
+        }
     }
 
     private void moveFrogUp() {
