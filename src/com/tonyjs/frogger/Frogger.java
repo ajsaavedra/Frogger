@@ -107,6 +107,9 @@ public class Frogger extends Application {
 
                 gc.clearRect(0, 0, APP_WIDTH, APP_HEIGHT);
                 animateFrog();
+                if (CLICKED) {
+                    keepFrogWithinCanvas();
+                }
             }
         };
         timer.start();
@@ -187,6 +190,22 @@ public class Frogger extends Application {
         frogSprite.render(gc);
         frogSprite.update(elapsedTime);
         CLICKED = false;
+    }
+
+    private void keepFrogWithinCanvas() {
+        if (frogSprite.getPositionX() < 5) {
+            frogSprite.setPositionXY(frogSprite.getPositionX() + 5, frogSprite.getPositionY());
+            frogSprite.setVelocity(0, 0);
+        } else if (frogSprite.getPositionX() > APP_WIDTH - 25) {
+            frogSprite.setPositionXY(frogSprite.getPositionX() - 25, frogSprite.getPositionY());
+            frogSprite.setVelocity(0, 0);
+        } else if (frogSprite.getPositionY() > APP_HEIGHT - 25) {
+            frogSprite.setPositionXY(frogSprite.getPositionX(), frogSprite.getPositionY() - 25);
+            frogSprite.setVelocity(0, 0);
+        } else if (frogSprite.getPositionY() < 80) {
+            frogSprite.setPositionXY(frogSprite.getPositionX(), frogSprite.getPositionY() + 5);
+            frogSprite.setVelocity(0, 0);
+        }
     }
 
     public class LongValue {
