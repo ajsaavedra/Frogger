@@ -41,13 +41,13 @@ public class Sprite {
         this.height = image.getHeight();
     }
 
-    public Image getImage() {
-        return image;
+    public void setImage(String filePath) {
+        Image toReturn = new Image(filePath);
+        setImage(toReturn);
     }
 
-    public void resizeImage(String filepath, int width, int height) {
-        Image toReturn = new Image(filepath, width, height, false, false);
-        setImage(toReturn);
+    public Image getImage() {
+        return image;
     }
 
     public WritableImage writeFromBufferedImage(BufferedImage bf) {
@@ -81,12 +81,7 @@ public class Sprite {
         this.velocityX = velocityX;
         this.velocityY = velocityY;
     }
-
-    public void addVelocity(double x, double y) {
-        this.velocityX += x;
-        this.velocityY += y;
-    }
-
+    
     public double getVelocityX() {
         return velocityX;
     }

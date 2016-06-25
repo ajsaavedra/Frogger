@@ -12,7 +12,7 @@ public class Truck {
 
     private Sprite setTruck() {
         Sprite img = new Sprite();
-        img.resizeImage("/images/truck.png", 60, 40);
+        img.setImage("/images/truck.png");
         return img;
     }
 

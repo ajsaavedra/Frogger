@@ -25,12 +25,13 @@ public class Frogger extends Application {
     private int vehicleVelocityX = 50;
     private boolean CLICKED, GAME_START;
     private Group root;
-    private GraphicsContext gc;
+    private GraphicsContext gc, riverGC;
     private Frog frogger;
-    private Sprite frogSprite;
+    private Sprite frogSprite, temp;
     private Sprite[] currentFrogAnimation;
     private ArrayList<Car> firstRow, secondRow, thirdRow, fourthRow;
     private ArrayList<Truck> trucks;
+    private ArrayList<Tree> trees;
     private AnimationTimer timer;
     private LongValue startNanoTime;
 
@@ -51,15 +52,21 @@ public class Frogger extends Application {
         root = new Group();
 
         Canvas canvas = new Canvas(APP_WIDTH, APP_HEIGHT);
+        Canvas treeCanvas = new Canvas(APP_WIDTH, APP_HEIGHT);
+
         gc = canvas.getGraphicsContext2D();
+        riverGC = treeCanvas.getGraphicsContext2D();
 
         ImageView background = setBackground();
-        root.getChildren().addAll(background, canvas);
 
         setFrogger();
         initializeCars();
         placeCars();
         setTrucks();
+        initializeTrees();
+        setTrees();
+
+        root.getChildren().addAll(background, treeCanvas, canvas);
 
         return root;
     }
@@ -128,28 +135,27 @@ public class Frogger extends Application {
     private void placeCars() {
         double x = 50;
         double y = 600;
-        Sprite c;
         for (int i = 0; i < 4; i++) {
-            c = firstRow.get(i).getCar();
-            c.setPositionXY(x, y);
-            c.setVelocity(vehicleVelocityX, 0);
-            c.render(gc);
+            temp = firstRow.get(i).getCar();
+            temp.setPositionXY(x, y);
+            temp.setVelocity(-vehicleVelocityX, 0);
+            temp.render(gc);
 
-            c = secondRow.get(i).getCar();
-            c.setPositionXY(x, y - 45);
-            c.setVelocity(-vehicleVelocityX, 0);
-            c.render(gc);
+            temp = secondRow.get(i).getCar();
+            temp.setPositionXY(x, y - 45);
+            temp.setVelocity(vehicleVelocityX, 0);
+            temp.render(gc);
 
-            c = thirdRow.get(i).getCar();
-            c.setPositionXY(x, y - 90);
-            c.setVelocity(vehicleVelocityX, 0);
-            c.render(gc);
+            temp = thirdRow.get(i).getCar();
+            temp.setPositionXY(x, y - 90);
+            temp.setVelocity(-vehicleVelocityX, 0);
+            temp.render(gc);
 
             if (i < 2) {
-                c = fourthRow.get(i).getCar();
-                c.setPositionXY(x, y - 135);
-                c.setVelocity(vehicleVelocityX * 3, 0);
-                c.render(gc);
+                temp = fourthRow.get(i).getCar();
+                temp.setPositionXY(x, y - 135);
+                temp.setVelocity(vehicleVelocityX * 3, 0);
+                temp.render(gc);
             }
 
             x += 150;
@@ -160,14 +166,62 @@ public class Frogger extends Application {
         trucks = new ArrayList<>();
         double x = 50;
         double y = 420;
-        Sprite t;
         for (int i = 0; i < 3; i++) {
             trucks.add(i, new Truck());
-            t = trucks.get(i).getTruck();
-            t.setPositionXY(x, y);
-            t.setVelocity(-vehicleVelocityX, 0);
-            t.render(gc);
+            temp = trucks.get(i).getTruck();
+            temp.setPositionXY(x, y);
+            temp.setVelocity(-vehicleVelocityX, 0);
+            temp.render(gc);
             x += 180;
+        }
+    }
+
+    private void initializeTrees() {
+        trees = new ArrayList<>();
+        for (int row = 0; row < 3; row++) {
+            if (row < 1) {
+                trees.add(0, new Tree("/images/tree_1.png"));
+                trees.add(1, new Tree("/images/tree_1.png"));
+                trees.add(2, new Tree("/images/tree_1.png"));
+                trees.add(3, new Tree("/images/tree_1.png"));
+            } else if (row < 2) {
+                trees.add(4, new Tree("/images/tree_2.png"));
+                trees.add(5, new Tree("/images/tree_2.png"));
+                trees.add(6, new Tree("/images/tree_2.png"));
+            } else {
+                trees.add(7, new Tree("/images/tree_3.png"));
+                trees.add(8, new Tree("/images/tree_3.png"));
+                trees.add(9, new Tree("/images/tree_3.png"));
+                trees.add(10, new Tree("/images/tree_3.png"));
+            }
+        }
+    }
+
+    private void setTrees() {
+        double x = 40;
+        double y = 290;
+        for (int tree = 0; tree < 11; tree++) {
+            if (tree < 4) {
+                x += 200 * tree;
+                temp = trees.get(tree).getTree();
+                temp.setVelocity(100, 0);
+                temp.setPositionXY(x, y);
+                temp.render(riverGC);
+                x = 40;
+            } else if (tree < 7) {
+                y = 220;
+                temp = trees.get(tree).getTree();
+                temp.setVelocity(100, 0);
+                temp.setPositionXY(trees.get(tree-1).getTree().getPositionX() - (tree * 50), y);
+                temp.render(riverGC);
+                x = 40; y -= 80;
+            } else {
+                temp = trees.get(tree).getTree();
+                temp.setVelocity(100, 0);
+                temp.setPositionXY(x, y);
+                temp.render(riverGC);
+                x += 200;
+            }
         }
     }
 
@@ -179,9 +233,13 @@ public class Frogger extends Application {
                 startNanoTime.value = now;
 
                 gc.clearRect(0, 0, APP_WIDTH, APP_HEIGHT);
+                riverGC.clearRect(0, 0, APP_WIDTH, APP_HEIGHT);
+
                 animateFrog();
                 animateVehicles();
+                animateTrees();
                 checkVehicleLocation();
+                checkTreeLocation();
 
                 if (CLICKED) {
                     keepFrogWithinCanvas();
@@ -202,7 +260,7 @@ public class Frogger extends Application {
 
         motionTime += 0.12;
         if (motionTime > 0.5 && CLICKED) {
-            Sprite temp = frogSprite;
+            temp = frogSprite;
             animate();
             frogSprite.setPositionXY(temp.getPositionX(), temp.getPositionY());
             frogSprite.setVelocity(temp.getVelocityX(), temp.getVelocityY());
@@ -221,53 +279,68 @@ public class Frogger extends Application {
     }
 
     private void animateVehicles() {
-        Sprite v;
         for (int i = 0; i < 4; i++) {
             if (i < 2) {
-                v = fourthRow.get(i).getCar();
-                v.render(gc);
-                v.update(elapsedTime);
+                temp = fourthRow.get(i).getCar();
+                temp.render(gc);
+                temp.update(elapsedTime);
             }
             if (i < 3) {
-                v = trucks.get(i).getTruck();
-                v.render(gc);
-                v.update(elapsedTime);
+                temp = trucks.get(i).getTruck();
+                temp.render(gc);
+                temp.update(elapsedTime);
             }
 
-            v = firstRow.get(i).getCar();
-            v.render(gc);
-            v.update(elapsedTime);
+            temp = firstRow.get(i).getCar();
+            temp.render(gc);
+            temp.update(elapsedTime);
 
-            v = secondRow.get(i).getCar();
-            v.render(gc);
-            v.update(elapsedTime);
+            temp = secondRow.get(i).getCar();
+            temp.render(gc);
+            temp.update(elapsedTime);
 
-            v = thirdRow.get(i).getCar();
-            v.render(gc);
-            v.update(elapsedTime);
+            temp = thirdRow.get(i).getCar();
+            temp.render(gc);
+            temp.update(elapsedTime);
+        }
+    }
+
+    private void animateTrees() {
+        for (Tree t : trees) {
+            temp = t.getTree();
+            temp.render(riverGC);
+            temp.update(elapsedTime);
+        }
+    }
+
+    private void checkTreeLocation() {
+        for (Tree t : trees) {
+            temp = t.getTree();
+            if (temp.getPositionX() > APP_WIDTH) {
+                temp.setPositionXY(-temp.getWidth(), temp.getPositionY());
+            }
         }
     }
 
     private void checkVehicleLocation() {
-        Sprite v;
         for (int i = 0; i < 4; i++) {
             if (i < 2) {
-                v = fourthRow.get(i).getCar();
-                resetVehicle(v);
+                temp = fourthRow.get(i).getCar();
+                resetVehicle(temp);
             }
             if (i < 3) {
-                v = trucks.get(i).getTruck();
-                resetVehicle(v);
+                temp = trucks.get(i).getTruck();
+                resetVehicle(temp);
             }
 
-            v = firstRow.get(i).getCar();
-            resetVehicle(v);
+            temp = firstRow.get(i).getCar();
+            resetVehicle(temp);
 
-            v = secondRow.get(i).getCar();
-            resetVehicle(v);
+            temp = secondRow.get(i).getCar();
+            resetVehicle(temp);
 
-            v = thirdRow.get(i).getCar();
-            resetVehicle(v);
+            temp = thirdRow.get(i).getCar();
+            resetVehicle(temp);
         }
     }
 
@@ -275,25 +348,19 @@ public class Frogger extends Application {
         if (v.getPositionX() < 0 - v.getWidth()) {
             v.setPositionXY(APP_WIDTH, v.getPositionY());
         } else if (v.getPositionX() > APP_WIDTH) {
-            v.setPositionXY(0, v.getPositionY());
+            v.setPositionXY(-v.getWidth(), v.getPositionY());
         }
     }
 
     private boolean frogWasHit() {
-        double x = frogSprite.getPositionX();
-
         for (int i = 0; i < 4; i++) {
-            if (i < 2) {
-                if (fourthRow.get(i).getCar().intersectsSprite(frogSprite)) {
+            if (i < 2 && fourthRow.get(i).getCar().intersectsSprite(frogSprite)) {
                     return true;
-                }
             }
-            if (i < 3) {
-                if (trucks.get(i).getTruck().intersectsSprite(frogSprite)) {
+            if (i < 3 && trucks.get(i).getTruck().intersectsSprite(frogSprite)) {
                     return true;
-                }
             }
-            
+
             if (firstRow.get(i).getCar().intersectsSprite(frogSprite)) {
                 return true;
             } else if (secondRow.get(i).getCar().intersectsSprite(frogSprite)) {
@@ -308,41 +375,41 @@ public class Frogger extends Application {
     private void moveFrogUp() {
         if (currentFrogAnimation != frogger.getUpwardFrog()) {
             currentFrogAnimation = frogger.getUpwardFrog();
-            Sprite temp = frogSprite;
+            temp = frogSprite;
             frogSprite = currentFrogAnimation[0];
             frogSprite.setPositionXY(temp.getPositionX(), temp.getPositionY());
         }
-        setFrogVelocity(0, -200);
+        setFrogVelocity(0, -220);
     }
 
     private void moveFrogDown() {
         if (currentFrogAnimation != frogger.getDownwardFrog()) {
             currentFrogAnimation = frogger.getDownwardFrog();
-            Sprite temp = frogSprite;
+            temp = frogSprite;
             frogSprite = currentFrogAnimation[0];
             frogSprite.setPositionXY(temp.getPositionX(), temp.getPositionY());
         }
-        setFrogVelocity(0, 200);
+        setFrogVelocity(0, 220);
     }
 
     private void moveFrogLeft() {
         if (currentFrogAnimation != frogger.getLeftwardFrog()) {
             currentFrogAnimation = frogger.getLeftwardFrog();
-            Sprite temp = frogSprite;
+            temp = frogSprite;
             frogSprite = currentFrogAnimation[0];
             frogSprite.setPositionXY(temp.getPositionX(), temp.getPositionY());
         }
-        setFrogVelocity(-200, 0);
+        setFrogVelocity(-220, 0);
     }
 
     private void moveFrogRight() {
         if (currentFrogAnimation != frogger.getRightwardFrog()) {
             currentFrogAnimation = frogger.getRightwardFrog();
-            Sprite temp = frogSprite;
+            temp = frogSprite;
             frogSprite = currentFrogAnimation[0];
             frogSprite.setPositionXY(temp.getPositionX(), temp.getPositionY());
         }
-        setFrogVelocity(200, 0);
+        setFrogVelocity(220, 0);
     }
 
     private void setFrogVelocity(double x, double y) {
