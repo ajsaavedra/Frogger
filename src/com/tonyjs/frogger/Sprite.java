@@ -46,10 +46,6 @@ public class Sprite {
         setImage(toReturn);
     }
 
-    public Image getImage() {
-        return image;
-    }
-
     public WritableImage writeFromBufferedImage(BufferedImage bf) {
         WritableImage wr = null;
         if (bf != null) {
@@ -81,7 +77,7 @@ public class Sprite {
         this.velocityX = velocityX;
         this.velocityY = velocityY;
     }
-    
+
     public double getVelocityX() {
         return velocityX;
     }
