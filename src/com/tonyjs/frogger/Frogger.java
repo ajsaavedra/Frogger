@@ -28,7 +28,8 @@ public class Frogger extends Application {
     private GraphicsContext gc, riverGC;
     private Frog frogger;
     private Sprite frogSprite, temp;
-    private Sprite[] currentFrogAnimation;
+    private Sprite[] currentFrogAnimation, firstRowTurtles, secondRowTurtles,
+            thirdRowTurtles, twoTurtleGroup, threeTurtleGroup;
     private ArrayList<Car> firstRow, secondRow, thirdRow, fourthRow;
     private ArrayList<Truck> trucks;
     private ArrayList<Tree> trees;
@@ -65,6 +66,8 @@ public class Frogger extends Application {
         setTrucks();
         initializeTrees();
         setTrees();
+        initializeTurtles();
+        setTurtles();
 
         root.getChildren().addAll(background, treeCanvas, canvas);
 
@@ -204,24 +207,60 @@ public class Frogger extends Application {
             if (tree < 4) {
                 x += 200 * tree;
                 temp = trees.get(tree).getTree();
-                temp.setVelocity(100, 0);
+                temp.setVelocity(50, 0);
                 temp.setPositionXY(x, y);
                 temp.render(riverGC);
                 x = 40;
             } else if (tree < 7) {
                 y = 220;
                 temp = trees.get(tree).getTree();
-                temp.setVelocity(100, 0);
+                temp.setVelocity(150, 0);
                 temp.setPositionXY(trees.get(tree-1).getTree().getPositionX() - (tree * 50), y);
                 temp.render(riverGC);
                 x = 40; y -= 80;
             } else {
                 temp = trees.get(tree).getTree();
-                temp.setVelocity(100, 0);
+                temp.setVelocity(50, 0);
                 temp.setPositionXY(x, y);
                 temp.render(riverGC);
                 x += 200;
             }
+        }
+    }
+
+    private void initializeTurtles() {
+        Turtle groupOfTwo = new Turtle("/images/turtle_2_sprites.png", 3);
+        Turtle groupOfThree = new Turtle("/images/turtle_3_sprites.png", 3);
+        twoTurtleGroup = groupOfTwo.getTurtleSprites();
+        threeTurtleGroup = groupOfThree.getTurtleSprites();
+        thirdRowTurtles = new Sprite[4];
+        firstRowTurtles = new Sprite[4];
+        secondRowTurtles = new Sprite[3];
+    }
+
+    private void setTurtles() {
+        double x = 40;
+        for (int j = 0; j < 4; j++) {
+            thirdRowTurtles[j] = new Sprite();
+            thirdRowTurtles[j].setImage(threeTurtleGroup[0].getImage());
+            thirdRowTurtles[j].setVelocity(-80, 0);
+            thirdRowTurtles[j].setPositionXY(x, 330);
+            thirdRowTurtles[j].render(riverGC);
+
+            if (j < 3) {
+                secondRowTurtles[j] = new Sprite();
+                secondRowTurtles[j].setImage(threeTurtleGroup[0].getImage());
+                secondRowTurtles[j].setVelocity(-100, 0);
+                secondRowTurtles[j].setPositionXY(x, 255);
+                secondRowTurtles[j].render(riverGC);
+            }
+
+            firstRowTurtles[j] = new Sprite();
+            firstRowTurtles[j].setImage(twoTurtleGroup[0].getImage());
+            firstRowTurtles[j].setVelocity(-80, 0);
+            firstRowTurtles[j].setPositionXY(x, 180);
+            firstRowTurtles[j].render(riverGC);
+            x += 180;
         }
     }
 
@@ -238,8 +277,10 @@ public class Frogger extends Application {
                 animateFrog();
                 animateVehicles();
                 animateTrees();
+                animateTurtles();
                 checkVehicleLocation();
                 checkTreeLocation();
+                checkTurtleLocation();
 
                 if (CLICKED) {
                     keepFrogWithinCanvas();
@@ -318,6 +359,40 @@ public class Frogger extends Application {
             temp = t.getTree();
             if (temp.getPositionX() > APP_WIDTH) {
                 temp.setPositionXY(-temp.getWidth(), temp.getPositionY());
+            }
+        }
+    }
+
+    private void animateTurtles() {
+        for (int j = 0; j < 4; j++) {
+            if (j < 3) {
+                secondRowTurtles[j].render(riverGC);
+                secondRowTurtles[j].update(elapsedTime);
+            }
+            thirdRowTurtles[j].render(riverGC);
+            thirdRowTurtles[j].update(elapsedTime);
+
+            firstRowTurtles[j].render(riverGC);
+            firstRowTurtles[j].update(elapsedTime);
+        }
+    }
+
+    private void checkTurtleLocation() {
+        for (int j = 0; j < 4; j++) {
+            if (j < 3) {
+                temp = secondRowTurtles[j];
+                if (temp.getPositionX() < -temp.getWidth()) {
+                    temp.setPositionXY(APP_WIDTH, temp.getPositionY());
+                }
+            }
+            temp = thirdRowTurtles[j];
+            if (temp.getPositionX() < -temp.getWidth()) {
+                temp.setPositionXY(APP_WIDTH, temp.getPositionY());
+            }
+
+            temp = firstRowTurtles[j];
+            if (temp.getPositionX() < -temp.getWidth()) {
+                temp.setPositionXY(APP_WIDTH, temp.getPositionY());
             }
         }
     }
