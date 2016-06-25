@@ -98,7 +98,8 @@ public class Frogger extends Application {
                     e.getCode() == KeyCode.DOWN ||
                     e.getCode() == KeyCode.LEFT ||
                     e.getCode() == KeyCode.RIGHT) {
-                stopFrog();
+                setFrogVelocity(0, 0);
+                CLICKED = false;
             }
         });
     }
@@ -432,12 +433,6 @@ public class Frogger extends Application {
         renderAndUpdateSprite(frogSprite, gc);
     }
 
-    private void stopFrog() {
-        frogSprite.setVelocity(0, 0);
-        renderAndUpdateSprite(frogSprite, gc);
-        CLICKED = false;
-    }
-
     private void renderAndUpdateSprite(Sprite sprite, GraphicsContext g) {
         sprite.render(g);
         sprite.update(elapsedTime);
@@ -446,16 +441,16 @@ public class Frogger extends Application {
     private void keepFrogWithinCanvas() {
         if (frogSprite.getPositionX() < 5) {
             frogSprite.setPositionXY(frogSprite.getPositionX() + 5, frogSprite.getPositionY());
-            stopFrog();
+            setFrogVelocity(0, 0);
         } else if (frogSprite.getPositionX() > APP_WIDTH - 25) {
             frogSprite.setPositionXY(frogSprite.getPositionX() - 25, frogSprite.getPositionY());
-            stopFrog();
+            setFrogVelocity(0, 0);
         } else if (frogSprite.getPositionY() > APP_HEIGHT - 25) {
             frogSprite.setPositionXY(frogSprite.getPositionX(), frogSprite.getPositionY() - 25);
-            stopFrog();
+            setFrogVelocity(0, 0);
         } else if (frogSprite.getPositionY() < 80) {
             frogSprite.setPositionXY(frogSprite.getPositionX(), frogSprite.getPositionY() + 5);
-            stopFrog();
+            setFrogVelocity(0, 0);
         }
     }
 
