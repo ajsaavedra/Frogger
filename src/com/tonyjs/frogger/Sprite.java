@@ -99,7 +99,7 @@ public class Sprite {
     }
 
     public Rectangle2D getBoundary() {
-        return new Rectangle2D(positionX, positionY, width/1.5, height/1.5);
+        return new Rectangle2D(positionX, positionY, width *.90, height/1.5);
     }
 
     public boolean intersectsSprite(Sprite s) {

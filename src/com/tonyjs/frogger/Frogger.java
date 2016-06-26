@@ -19,17 +19,17 @@ import java.util.ArrayList;
  */
 public class Frogger extends Application {
     private int APP_WIDTH = 650;
-    private int APP_HEIGHT = 700;
+    private int APP_HEIGHT = 650;
     private int currentAnimation = 0;
     private double elapsedTime, motionTime;
     private int vehicleVelocityX = 50;
-    private boolean CLICKED, GAME_START;
+    private boolean CLICKED, GAME_START, ON_RIVER_OBJ;
     private Group root;
     private GraphicsContext gc, riverGC;
     private Frog frogger;
     private Sprite frogSprite, temp;
     private Sprite[] currentFrogAnimation, firstRowTurtles, secondRowTurtles,
-            thirdRowTurtles, twoTurtleGroup, threeTurtleGroup;
+            twoTurtleGroup, threeTurtleGroup;
     private ArrayList<Car> firstRow, secondRow, thirdRow, fourthRow;
     private ArrayList<Truck> trucks;
     private ArrayList<Tree> trees;
@@ -138,7 +138,7 @@ public class Frogger extends Application {
 
     private void placeCars() {
         double x = 50;
-        double y = 600;
+        double y = 560;
         for (int i = 0; i < 4; i++) {
             setupSprite(firstRow.get(i).getCar(), x, y, -vehicleVelocityX, 0, gc);
             setupSprite(secondRow.get(i).getCar(), x, y - 45, vehicleVelocityX, 0, gc);
@@ -153,7 +153,7 @@ public class Frogger extends Application {
     private void setTrucks() {
         trucks = new ArrayList<>();
         double x = 50;
-        double y = 420;
+        double y = 390;
         for (int i = 0; i < 3; i++) {
             trucks.add(i, new Truck());
             setupSprite(trucks.get(i).getTruck(), x, y, -vehicleVelocityX, 0, gc);
@@ -165,36 +165,35 @@ public class Frogger extends Application {
         trees = new ArrayList<>();
         for (int row = 0; row < 3; row++) {
             if (row < 1) {
-                trees.add(0, new Tree("/images/tree_1.png"));
-                trees.add(1, new Tree("/images/tree_1.png"));
-                trees.add(2, new Tree("/images/tree_1.png"));
-                trees.add(3, new Tree("/images/tree_1.png"));
+                trees.add(new Tree("/images/tree_1.png"));
+                trees.add(new Tree("/images/tree_1.png"));
+                trees.add(new Tree("/images/tree_1.png"));
+                trees.add(new Tree("/images/tree_1.png"));
             } else if (row < 2) {
-                trees.add(4, new Tree("/images/tree_2.png"));
-                trees.add(5, new Tree("/images/tree_2.png"));
-                trees.add(6, new Tree("/images/tree_2.png"));
+                trees.add(new Tree("/images/tree_2.png"));
+                trees.add(new Tree("/images/tree_2.png"));
             } else {
-                trees.add(7, new Tree("/images/tree_3.png"));
-                trees.add(8, new Tree("/images/tree_3.png"));
-                trees.add(9, new Tree("/images/tree_3.png"));
-                trees.add(10, new Tree("/images/tree_3.png"));
+                trees.add(new Tree("/images/tree_3.png"));
+                trees.add(new Tree("/images/tree_3.png"));
+                trees.add(new Tree("/images/tree_3.png"));
+                trees.add(new Tree("/images/tree_3.png"));
             }
         }
     }
 
     private void setTrees() {
         double x = 40;
-        double y = 290;
-        for (int tree = 0; tree < 11; tree++) {
+        double y = 260;
+        for (int tree = 0; tree < 10; tree++) {
             if (tree < 4) {
                 x += 200 * tree;
                 setupSprite(trees.get(tree).getTree(), x, y, 50, 0, riverGC);
                 x = 40;
-            } else if (tree < 7) {
-                y = 220;
+            } else if (tree < 6) {
+                y = 210;
                 setupSprite(trees.get(tree).getTree(),
-                        trees.get(tree-1).getTree().getPositionX() - (tree * 50), y,
-                        150, 0, riverGC);
+                        trees.get(tree-1).getTree().getPositionX() - (tree * 100), y,
+                        100, 0, riverGC);
                 x = 40; y -= 80;
             } else {
                 setupSprite(trees.get(tree).getTree(), x, y, 50, 0, riverGC);
@@ -208,28 +207,21 @@ public class Frogger extends Application {
         Turtle groupOfThree = new Turtle("/images/turtle_3_sprites.png", 3);
         twoTurtleGroup = groupOfTwo.getTurtleSprites();
         threeTurtleGroup = groupOfThree.getTurtleSprites();
-        thirdRowTurtles = new Sprite[4];
         firstRowTurtles = new Sprite[4];
-        secondRowTurtles = new Sprite[3];
+        secondRowTurtles = new Sprite[4];
     }
 
     private void setTurtles() {
-        double x = 40;
+        double x = 0;
         for (int j = 0; j < 4; j++) {
-            thirdRowTurtles[j] = new Sprite();
-            thirdRowTurtles[j].setImage(threeTurtleGroup[0].getImage());
-            setupSprite(thirdRowTurtles[j], x, 330, -80, 0, riverGC);
-
-            if (j < 3) {
-                secondRowTurtles[j] = new Sprite();
-                secondRowTurtles[j].setImage(threeTurtleGroup[0].getImage());
-                setupSprite(secondRowTurtles[j], x, 255, -100, 0, riverGC);
-            }
+            secondRowTurtles[j] = new Sprite();
+            secondRowTurtles[j].setImage(threeTurtleGroup[0].getImage());
+            setupSprite(secondRowTurtles[j], x, 300, -80, 0, riverGC);
 
             firstRowTurtles[j] = new Sprite();
             firstRowTurtles[j].setImage(twoTurtleGroup[0].getImage());
-            setupSprite(firstRowTurtles[j], x, 180, -80, 0, riverGC);
-            x += 180;
+            setupSprite(firstRowTurtles[j], x, 170, -80, 0, riverGC);
+            x += 200;
         }
     }
 
@@ -256,12 +248,13 @@ public class Frogger extends Application {
                 checkVehicleLocation();
                 checkTreeLocation();
                 checkTurtleLocation();
+                isOnRiverObject();
 
                 if (CLICKED) {
                     keepFrogWithinCanvas();
                 }
 
-                if (frogWasHit()) {
+                if (frogWasHit() || isInRiver()) {
                     GAME_START = false;
                     timer.stop();
                 }
@@ -272,7 +265,7 @@ public class Frogger extends Application {
 
     private void animateFrog() {
         renderAndUpdateSprite(frogSprite, gc);
-        motionTime += 0.12;
+        motionTime += 0.20;
         if (motionTime > 0.5 && CLICKED) {
             temp = frogSprite;
             animate();
@@ -280,7 +273,6 @@ public class Frogger extends Application {
             frogSprite.setVelocity(temp.getVelocityX(), temp.getVelocityY());
             motionTime = 0;
         }
-
     }
 
     private void animate() {
@@ -325,7 +317,6 @@ public class Frogger extends Application {
             if (j < 3) {
                 renderAndUpdateSprite(secondRowTurtles[j], riverGC);
             }
-            renderAndUpdateSprite(thirdRowTurtles[j], riverGC);
             renderAndUpdateSprite(firstRowTurtles[j], riverGC);
         }
     }
@@ -335,13 +326,38 @@ public class Frogger extends Application {
             if (j < 3 && secondRowTurtles[j].getPositionX() < -secondRowTurtles[j].getWidth()) {
                 secondRowTurtles[j].setPositionXY(APP_WIDTH, secondRowTurtles[j].getPositionY());
             }
-            if (thirdRowTurtles[j].getPositionX() < -thirdRowTurtles[j].getWidth()) {
-                thirdRowTurtles[j].setPositionXY(APP_WIDTH, thirdRowTurtles[j].getPositionY());
-            }
             if (firstRowTurtles[j].getPositionX() < -firstRowTurtles[j].getWidth()) {
                 firstRowTurtles[j].setPositionXY(APP_WIDTH, firstRowTurtles[j].getPositionY());
             }
         }
+    }
+
+    private boolean isInRiver() {
+        return frogSprite.getPositionY() <= 325 && !ON_RIVER_OBJ;
+    }
+
+    private void isOnRiverObject() {
+        ON_RIVER_OBJ = addFrogToRiverObject();
+    }
+
+    private boolean addFrogToRiverObject() {
+        for (Tree t : trees) {
+            if (t.getTree().intersectsSprite(frogSprite)) {
+                setFrogVelocity(t.getTree().getVelocityX()/2, 0);
+                return true;
+            }
+        }
+
+        for (int i = 0; i < 4; i++) {
+            if (frogSprite.intersectsSprite(firstRowTurtles[i])) {
+                setFrogVelocity(firstRowTurtles[i].getVelocityX()/2, 0);
+                return true;
+            } else if (frogSprite.intersectsSprite(secondRowTurtles[i])) {
+                setFrogVelocity(secondRowTurtles[i].getVelocityX()/2, 0);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void checkVehicleLocation() {
@@ -395,7 +411,11 @@ public class Frogger extends Application {
             currentFrogAnimation = frogger.getUpwardFrog();
             updateFrogSprite();
         }
-        setFrogVelocity(0, -220);
+        if (ON_RIVER_OBJ || frogSprite.getPositionY() <= 350) {
+            setFrogVelocity(0, -1225);
+        } else {
+            setFrogVelocity(0, -250);
+        }
     }
 
     private void moveFrogDown() {
@@ -403,7 +423,11 @@ public class Frogger extends Application {
             currentFrogAnimation = frogger.getDownwardFrog();
             updateFrogSprite();
         }
-        setFrogVelocity(0, 220);
+        if (ON_RIVER_OBJ && frogSprite.getPositionY() < 280) {
+            setFrogVelocity(0, 1225);
+        } else {
+            setFrogVelocity(0, 250);
+        }
     }
 
     private void moveFrogLeft() {
@@ -411,7 +435,11 @@ public class Frogger extends Application {
             currentFrogAnimation = frogger.getLeftwardFrog();
             updateFrogSprite();
         }
-        setFrogVelocity(-220, 0);
+        if (ON_RIVER_OBJ) {
+            setFrogVelocity(-1000, 0);
+        } else {
+            setFrogVelocity(-250, 0);
+        }
     }
 
     private void moveFrogRight() {
@@ -419,13 +447,18 @@ public class Frogger extends Application {
             currentFrogAnimation = frogger.getRightwardFrog();
             updateFrogSprite();
         }
-        setFrogVelocity(220, 0);
+        if (ON_RIVER_OBJ) {
+            setFrogVelocity(1000, 0);
+        } else {
+            setFrogVelocity(250, 0);
+        }
     }
 
     private void updateFrogSprite() {
         temp = frogSprite;
         frogSprite = currentFrogAnimation[0];
         frogSprite.setPositionXY(temp.getPositionX(), temp.getPositionY());
+        frogSprite.setVelocity(temp.getVelocityX(), temp.getVelocityY());
     }
 
     private void setFrogVelocity(double x, double y) {

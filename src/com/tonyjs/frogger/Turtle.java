@@ -24,9 +24,9 @@ public class Turtle {
 
         final int width;
         if (filePath == "/images/turtle_2_sprites.png") {
-            width = 70;
+            width = 90;
         } else {
-            width = 100;
+            width = 140;
         }
 
         final int height = 40;

@@ -32,8 +32,8 @@ public class Frog {
                         .getResource("/images/frog_sprites.png")
                         .toExternalForm()), null);
 
-        final int width = 40;
-        final int height = 40;
+        final int width = 31;
+        final int height = 31;
         final int rows = 1;
         final int cols = 11;
         for (int i = 0; i < rows; i++) {
