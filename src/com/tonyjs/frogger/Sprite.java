@@ -6,6 +6,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
+import javafx.scene.shape.Rectangle;
 
 import java.awt.image.BufferedImage;
 
@@ -92,6 +93,10 @@ public class Sprite {
 
     public double getWidth() {
         return width;
+    }
+
+    public double getHeight() {
+        return height;
     }
 
     public void render(GraphicsContext gc) {

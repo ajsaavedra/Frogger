@@ -10,6 +10,11 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
@@ -23,18 +28,23 @@ public class Frogger extends Application {
     private int currentAnimation = 0;
     private double elapsedTime, motionTime;
     private int vehicleVelocityX = 50;
-    private boolean CLICKED, GAME_START, ON_RIVER_OBJ;
-    private Group root;
+    private int totalScore = 0;
+    private int totalLives = 3;
+    private boolean CLICKED, GAME_START, GAME_OVER, ON_RIVER_OBJ;
+    private Rectangle[] winningTiles;
+    private Group root, rects;
     private GraphicsContext gc, riverGC;
     private Frog frogger;
     private Sprite frogSprite, temp;
     private Sprite[] currentFrogAnimation, firstRowTurtles, secondRowTurtles,
-            twoTurtleGroup, threeTurtleGroup;
+            twoTurtleGroup, threeTurtleGroup, bonusFrogs;
     private ArrayList<Car> firstRow, secondRow, thirdRow, fourthRow;
     private ArrayList<Truck> trucks;
     private ArrayList<Tree> trees;
     private AnimationTimer timer;
     private LongValue startNanoTime;
+    private Text scoreLabel;
+    private SoundEffect jump, squash, coin, extra, plunk, time;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -59,7 +69,7 @@ public class Frogger extends Application {
         riverGC = treeCanvas.getGraphicsContext2D();
 
         ImageView background = setBackground();
-
+        setLabels();
         setFrogger();
         initializeCars();
         placeCars();
@@ -68,8 +78,11 @@ public class Frogger extends Application {
         setTrees();
         initializeTurtles();
         setTurtles();
+        setWinningTiles();
+        setSounds();
+        bonusFrogs = new Sprite[5];
 
-        root.getChildren().addAll(background, treeCanvas, canvas);
+        root.getChildren().addAll(background, rects, scoreLabel, treeCanvas, canvas);
 
         return root;
     }
@@ -78,9 +91,12 @@ public class Frogger extends Application {
         scene.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.SPACE) {
                 GAME_START = true;
+                coin.playClip();
             } else if (GAME_START && e.getCode() == KeyCode.UP) {
                 CLICKED = true;
                 moveFrogUp();
+                totalScore += 10;
+                updateScoreLabel();
             } else if (GAME_START && e.getCode() == KeyCode.DOWN) {
                 CLICKED = true;
                 moveFrogDown();
@@ -98,7 +114,10 @@ public class Frogger extends Application {
                     e.getCode() == KeyCode.DOWN ||
                     e.getCode() == KeyCode.LEFT ||
                     e.getCode() == KeyCode.RIGHT) {
-                setFrogVelocity(0, 0);
+                if (frogSprite != null){
+                    jump.playClip();
+                    setFrogVelocity(0, 0);
+                }
                 CLICKED = false;
             }
         });
@@ -109,6 +128,19 @@ public class Frogger extends Application {
         bg.setFitWidth(APP_WIDTH);
         bg.setFitHeight(APP_HEIGHT);
         return bg;
+    }
+
+    private void setLabels() {
+        scoreLabel = new Text("SCORE: " + Integer.toString(totalScore));
+        scoreLabel.setFont(Font.font("Courier", FontWeight.EXTRA_BOLD, 25));
+        scoreLabel.setFill(Color.RED);
+        scoreLabel.setStroke(Color.BLACK);
+        scoreLabel.setLayoutX(20);
+        scoreLabel.setLayoutY(30);
+    }
+
+    private void updateScoreLabel() {
+        scoreLabel.setText("SCORE: " + Integer.toString(totalScore));
     }
 
     private void setFrogger() {
@@ -231,6 +263,29 @@ public class Frogger extends Application {
         sprite.render(g);
     }
 
+    private void setWinningTiles() {
+        rects = new Group();
+        winningTiles = new Rectangle[5];
+        double x = 20; double y = 85;
+        for (int i = 0; i < 5; i++) {
+            Rectangle r = new Rectangle();
+            r.setHeight(40); r.setWidth(55);
+            r.setLayoutX(x); r.setLayoutY(y);
+            r.setFill(Color.TRANSPARENT);
+            x+= 140;
+            rects.getChildren().add(r);
+            winningTiles[i] = r;
+        }
+    }
+
+    private void setSounds() {
+        jump = new SoundEffect("/sounds/hop.mp3");
+        squash = new SoundEffect("/sounds/squash.mp3");
+        plunk = new SoundEffect("/sounds/plunk.mp3");
+        coin = new SoundEffect("/sounds/coin.mp3");
+        extra = new SoundEffect("/sounds/extra.mp3");
+    }
+
     private void startGame() {
         startNanoTime = new LongValue(System.nanoTime());
         timer = new AnimationTimer() {
@@ -241,7 +296,14 @@ public class Frogger extends Application {
                 gc.clearRect(0, 0, APP_WIDTH, APP_HEIGHT);
                 riverGC.clearRect(0, 0, APP_WIDTH, APP_HEIGHT);
 
-                animateFrog();
+                if (frogSprite != null) {
+                    animateFrog();
+                }
+
+                if (totalLives == 0) {
+                    GAME_OVER = true;
+                }
+
                 animateVehicles();
                 animateTrees();
                 animateTurtles();
@@ -249,13 +311,34 @@ public class Frogger extends Application {
                 checkTreeLocation();
                 checkTurtleLocation();
                 isOnRiverObject();
+                renderBonuses();
 
-                if (CLICKED) {
+                if (CLICKED && frogSprite != null) {
                     keepFrogWithinCanvas();
                 }
 
-                if (frogWasHit() || isInRiver()) {
+                if (isOnWinningTile()) {
+                    if (allTilesFull()) {
+                        extra.playClip();
+                    } else {
+                        coin.playClip();
+                    }
+                    totalScore += 500;
+                    updateScoreLabel();
+                    setFrogger();
+                } else if (frogWasHit()) {
+                    squash.playClip();
+                    totalLives--;
+                    setFrogger();
+                } else if (isInRiver()) {
+                    plunk.playClip();
+                    totalLives--;
+                    setFrogger();
+                }
+
+                if (GAME_OVER) {
                     GAME_START = false;
+                    frogSprite = null;
                     timer.stop();
                 }
             }
@@ -360,6 +443,46 @@ public class Frogger extends Application {
         return false;
     }
 
+    private boolean isOnWinningTile() {
+        Rectangle r;
+        for (int i = 0; i < winningTiles.length; i++) {
+            r = winningTiles[i];
+            if (frogSprite.getPositionY() <= 85 + r.getHeight() &&
+                    frogSprite.getPositionX() >= r.getLayoutX() &&
+                    frogSprite.getPositionX() <= r.getLayoutX() + r.getWidth()) {
+                placeBonusFrog(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void placeBonusFrog(int index) {
+        Sprite bonus = new Sprite();
+        bonus.setImage("/images/bonus.png");
+        bonus.setPositionXY(winningTiles[index].getLayoutX(), 85);
+        bonus.render(riverGC);
+        bonusFrogs[index] = bonus;
+    }
+
+    private void renderBonuses() {
+        for (Sprite bonus : bonusFrogs) {
+            if (bonus != null) {
+                bonus.render(riverGC);
+            }
+        }
+    }
+
+    private boolean allTilesFull() {
+        for (Sprite bonus : bonusFrogs) {
+            if (bonus == null) {
+                return false;
+            }
+        }
+        totalLives++;
+        return true;
+    }
+
     private void checkVehicleLocation() {
         for (int i = 0; i < 4; i++) {
             if (i < 2) {
@@ -411,8 +534,8 @@ public class Frogger extends Application {
             currentFrogAnimation = frogger.getUpwardFrog();
             updateFrogSprite();
         }
-        if (ON_RIVER_OBJ || frogSprite.getPositionY() <= 350) {
-            setFrogVelocity(0, -1225);
+        if (ON_RIVER_OBJ || frogSprite.getPositionY() <= 385) {
+            setFrogVelocity(0, -1375);
         } else {
             setFrogVelocity(0, -250);
         }
@@ -423,7 +546,7 @@ public class Frogger extends Application {
             currentFrogAnimation = frogger.getDownwardFrog();
             updateFrogSprite();
         }
-        if (ON_RIVER_OBJ && frogSprite.getPositionY() < 280) {
+        if (ON_RIVER_OBJ && frogSprite.getPositionY() < 285) {
             setFrogVelocity(0, 1225);
         } else {
             setFrogVelocity(0, 250);
