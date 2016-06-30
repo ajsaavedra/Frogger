@@ -43,7 +43,7 @@ public class Frogger extends Application {
     private ArrayList<Tree> trees;
     private AnimationTimer timer;
     private LongValue startNanoTime;
-    private Text scoreLabel;
+    private Text scoreLabel, livesLabel;
     private SoundEffect jump, squash, coin, extra, plunk, time;
 
     @Override
@@ -82,7 +82,7 @@ public class Frogger extends Application {
         setSounds();
         bonusFrogs = new Sprite[5];
 
-        root.getChildren().addAll(background, rects, scoreLabel, treeCanvas, canvas);
+        root.getChildren().addAll(background, rects, scoreLabel, livesLabel, treeCanvas, canvas);
 
         return root;
     }
@@ -137,10 +137,21 @@ public class Frogger extends Application {
         scoreLabel.setStroke(Color.BLACK);
         scoreLabel.setLayoutX(20);
         scoreLabel.setLayoutY(30);
+
+        livesLabel = new Text("LIVES: " + Integer.toString(totalLives));
+        livesLabel.setFont(Font.font("Courier", FontWeight.EXTRA_BOLD, 25));
+        livesLabel.setFill(Color.RED);
+        livesLabel.setStroke(Color.BLACK);
+        livesLabel.setLayoutX(APP_WIDTH - 150);
+        livesLabel.setLayoutY(30);
     }
 
     private void updateScoreLabel() {
         scoreLabel.setText("SCORE: " + Integer.toString(totalScore));
+    }
+
+    private void updateLivesLabel() {
+        livesLabel.setText("LIVES: " + Integer.toString(totalLives));
     }
 
     private void setFrogger() {
@@ -328,12 +339,10 @@ public class Frogger extends Application {
                     setFrogger();
                 } else if (frogWasHit()) {
                     squash.playClip();
-                    totalLives--;
-                    setFrogger();
+                    updateAndSetFrog();
                 } else if (isInRiver()) {
                     plunk.playClip();
-                    totalLives--;
-                    setFrogger();
+                    updateAndSetFrog();
                 }
 
                 if (GAME_OVER) {
@@ -344,6 +353,12 @@ public class Frogger extends Application {
             }
         };
         timer.start();
+    }
+
+    private void updateAndSetFrog() {
+        totalLives--;
+        setFrogger();
+        updateLivesLabel();
     }
 
     private void animateFrog() {
