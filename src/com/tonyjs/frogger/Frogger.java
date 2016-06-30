@@ -269,7 +269,7 @@ public class Frogger extends Application {
         double x = 20; double y = 85;
         for (int i = 0; i < 5; i++) {
             Rectangle r = new Rectangle();
-            r.setHeight(40); r.setWidth(55);
+            r.setHeight(38); r.setWidth(55);
             r.setLayoutX(x); r.setLayoutY(y);
             r.setFill(Color.TRANSPARENT);
             x+= 140;
